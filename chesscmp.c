@@ -862,6 +862,31 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
       break;
 
+    case WM_KEYDOWN:
+      switch (wParam) {
+        case VK_F2:
+          curr_comparison++;
+
+          if (curr_comparison == num_comparisons)
+            curr_comparison = 0;
+
+          InvalidateRect(hWnd,NULL,TRUE);
+
+          break;
+
+        case VK_F3:
+          curr_comparison--;
+
+          if (curr_comparison == -1)
+            curr_comparison = num_comparisons - 1;
+
+          InvalidateRect(hWnd,NULL,TRUE);
+
+          break;
+      }
+
+      break;
+
     case WM_COMMAND:
       wmId    = LOWORD(wParam); // Remember, these are...
       wmEvent = HIWORD(wParam); // ...different for Win32!
