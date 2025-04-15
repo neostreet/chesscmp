@@ -25,7 +25,7 @@ static int height_in_pixels;
 char couldnt_get_status[] = "couldn't get status of %s\n";
 char couldnt_open[] = "couldn't open %s\n";
 
-static char read_board_comparison_failure[] = "read_board_comparison() of %s failed: %d";
+static char read_board_comparisons_failure[] = "read_board_comparisons() of %s failed: %d";
 
 static char chesscmp_piece_bitmap_name[] = "BIGBMP";
 
@@ -103,7 +103,8 @@ static char szAppName[100];  // Name of the app
 static char szTitle[100];    // The title bar text
 
 static struct board_comparison *comparisons;
-static int which_board;
+static int num_comparisons;
+static int curr_comparison;
 
 // Forward declarations of functions included in this code module:
 
@@ -134,8 +135,6 @@ int APIENTRY WinMain(HINSTANCE hInstance,
   int n;
   MSG msg;
   char *cpt;
-
-  // set_initial_board(comparisons->board[which_board]);
 
   width_in_pixels = WIDTH_IN_PIXELS;
   height_in_pixels = HEIGHT_IN_PIXELS;
@@ -312,11 +311,6 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
   else
     debug_y_offset = 0;
 
-  if ((cpt = getenv("DEBUG_WHICH_BOARD")) != NULL)
-    which_board = atoi(cpt);
-  else
-    which_board = 0;
-
   hInst = hInstance; // Store instance handle in our global variable
 
   chesscmp_window_width = 2 * (board_x_offset + BOARD_WIDTH) + window_extra_width;
@@ -421,7 +415,7 @@ void invalidate_square(HWND hWnd,int square)
   rank = RANK_OF(square);
   file = FILE_OF(square);
 
-  if (!comparisons->orientation)
+  if (!comparisons[curr_comparison].orientation)
     rank = (NUM_RANKS - 1) - rank;
   else
     file = (NUM_FILES - 1) - file;
@@ -494,10 +488,10 @@ void do_paint(HWND hWnd)
         fprintf(debug_fptr,"do_paint: m = %d, n = %d\n",m,n);
       }
 
-      if (!comparisons->orientation)
-        piece = get_piece2(comparisons->board[0],(NUM_RANKS - 1) - m,n);
+      if (!comparisons[curr_comparison].orientation)
+        piece = get_piece2(comparisons[curr_comparison].board[0],(NUM_RANKS - 1) - m,n);
       else
-        piece = get_piece2(comparisons->board[0],m,(NUM_FILES - 1) - n);
+        piece = get_piece2(comparisons[curr_comparison].board[0],m,(NUM_FILES - 1) - n);
 
       piece_offset = get_piece_offset(piece,m,n);
 
@@ -536,10 +530,10 @@ void do_paint(HWND hWnd)
         fprintf(debug_fptr,"do_paint: m = %d, n = %d\n",m,n);
       }
 
-      if (!comparisons->orientation)
-        piece = get_piece2(comparisons->board[1],(NUM_RANKS - 1) - m,n);
+      if (!comparisons[curr_comparison].orientation)
+        piece = get_piece2(comparisons[curr_comparison].board[1],(NUM_RANKS - 1) - m,n);
       else
-        piece = get_piece2(comparisons->board[1],m,(NUM_FILES - 1) - n);
+        piece = get_piece2(comparisons[curr_comparison].board[1],m,(NUM_FILES - 1) - n);
 
       piece_offset = get_piece_offset(piece,m,n);
 
@@ -619,7 +613,7 @@ void do_paint(HWND hWnd)
         bSelectedFont = TRUE;
       }
 
-      if (!comparisons->orientation)
+      if (!comparisons[curr_comparison].orientation)
         buf[0] = '1' + (NUM_RANKS - 1) - m;
       else
         buf[0] = '1' + m;
@@ -646,7 +640,7 @@ void do_paint(HWND hWnd)
         bSelectedFont = TRUE;
       }
 
-      if (!comparisons->orientation)
+      if (!comparisons[curr_comparison].orientation)
         buf[0] = '1' + (NUM_RANKS - 1) - m;
       else
         buf[0] = '1' + m;
@@ -674,7 +668,7 @@ void do_paint(HWND hWnd)
         bSelectedFont = TRUE;
       }
 
-      if (!comparisons->orientation)
+      if (!comparisons[curr_comparison].orientation)
         buf[0] = 'a' + m;
       else
         buf[0] = 'a' + (NUM_FILES - 1) - m;
@@ -698,7 +692,7 @@ void do_paint(HWND hWnd)
         bSelectedFont = TRUE;
       }
 
-      if (!comparisons->orientation)
+      if (!comparisons[curr_comparison].orientation)
         buf[0] = 'a' + m;
       else
         buf[0] = 'a' + (NUM_FILES - 1) - m;
@@ -739,13 +733,12 @@ static void handle_char_input(HWND hWnd,WPARAM wParam)
     DestroyWindow(hWnd);
 }
 
-void do_read(HWND hWnd,LPSTR name,struct board_comparison **comparison_pt)
+void do_read(HWND hWnd,LPSTR name,int *num_comparisons_pt,struct board_comparison **comparisons_pt)
 {
   int retval;
-  int num_comparisons;
   char buf[256];
 
-  retval = read_board_comparisons(name,&num_comparisons,comparison_pt);
+  retval = read_board_comparisons(name,num_comparisons_pt,comparisons_pt);
 
   if (!retval) {
     wsprintf(szTitle,"%s - %s",szAppName,
@@ -756,7 +749,7 @@ void do_read(HWND hWnd,LPSTR name,struct board_comparison **comparison_pt)
     InvalidateRect(hWnd,NULL,TRUE);
   }
   else {
-    wsprintf(buf,read_board_comparison_failure,name,retval);
+    wsprintf(buf,read_board_comparisons_failure,name,retval);
     MessageBox(hWnd,buf,NULL,MB_OK);
   }
 }
@@ -850,7 +843,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
       // read the game passed on the command line, if there is one
       if (szCmpFile[0])
-        do_read(hWnd,szCmpFile,&comparisons);
+        do_read(hWnd,szCmpFile,&num_comparisons,&comparisons);
 
       highlight_rank = -1;
       highlight_file = -1;
@@ -879,7 +872,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
           // Call the common dialog function.
           if (GetOpenFileName(&OpenFileName)) {
             name = OpenFileName.lpstrFile;
-            do_read(hWnd,name,&comparisons);
+            do_read(hWnd,name,&num_comparisons,&comparisons);
           }
 
           break;
@@ -1050,50 +1043,4 @@ void do_lbuttondown(HWND hWnd,int file,int rank)
   if (debug_fptr != NULL) {
     fprintf(debug_fptr,"do_lbuttondown: rank = %d, file = %d\n",rank,file);
   }
-
-  if ((highlight_rank == rank) && (highlight_file == file)) {
-    highlight_rank = -1;
-    highlight_file = -1;
-
-    invalidate_rect(hWnd,rank,file);
-    return;
-  }
-
-  if (!comparisons->orientation) {
-    if (highlight_rank == -1) {
-      move_start_square = ((NUM_RANKS - 1) - rank) * NUM_FILES + file;
-      move_start_square_piece = get_piece1(comparisons->board[which_board],move_start_square);
-    }
-    else {
-      move_end_square = ((NUM_RANKS - 1) - rank) * NUM_FILES + file;
-      move_end_square_piece = get_piece1(comparisons->board[which_board],move_end_square);
-    }
-  }
-  else {
-    if (highlight_rank == -1) {
-      move_start_square = rank * NUM_FILES + (NUM_FILES - 1) - file;
-      move_start_square_piece = get_piece1(comparisons->board[which_board],move_start_square);
-    }
-    else {
-      move_end_square = rank * NUM_FILES + (NUM_FILES - 1) - file;
-      move_end_square_piece = get_piece1(comparisons->board[which_board],move_end_square);
-    }
-  }
-
-  if (highlight_rank == -1) {
-    highlight_file = file;
-    highlight_rank = rank;
-
-    invalidate_rect(hWnd,rank,file);
-    return;
-  }
-
-  set_piece1(comparisons->board[which_board],move_end_square,move_start_square_piece);
-
-  invalidate_rect(hWnd,highlight_rank,highlight_file);
-
-  highlight_rank = -1;
-  highlight_file = -1;
-
-  invalidate_rect(hWnd,rank,file);
 }
