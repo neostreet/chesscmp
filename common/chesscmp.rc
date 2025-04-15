@@ -51,9 +51,7 @@ CHESSCMP MENU DISCARDABLE
 BEGIN
     POPUP "&File"
     BEGIN
-        MENUITEM "&New",                        IDM_NEW
         MENUITEM "Open &comparison file",       IDM_OPEN
-        MENUITEM "&Save",                       IDM_SAVE
         MENUITEM "Save &As",                    IDM_SAVEAS
         MENUITEM SEPARATOR
         MENUITEM "E&xit",                       IDM_EXIT
