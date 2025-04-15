@@ -46,7 +46,7 @@ void set_initial_board(unsigned char *board)
     board[n] = initial_board[n];
 }
 
-int read_board_comparison(char *filename,struct board_comparison *position_pt)
+int read_board_comparison(char *filename,struct board_comparison *comparison_pt)
 {
   int fhndl;
   unsigned int bytes_to_read;
@@ -57,7 +57,7 @@ int read_board_comparison(char *filename,struct board_comparison *position_pt)
 
   bytes_to_read = sizeof (struct board_comparison);
 
-  bytes_read = read(fhndl,(char *)position_pt,bytes_to_read);
+  bytes_read = read(fhndl,(char *)comparison_pt,bytes_to_read);
 
   if (bytes_read != bytes_to_read) {
     close(fhndl);
@@ -69,7 +69,7 @@ int read_board_comparison(char *filename,struct board_comparison *position_pt)
   return 0;
 }
 
-int write_board_comparison(char *filename,struct board_comparison *position_pt)
+int write_board_comparison(char *filename,struct board_comparison *comparison_pt)
 {
   int fhndl;
   unsigned int bytes_to_write;
@@ -81,7 +81,7 @@ int write_board_comparison(char *filename,struct board_comparison *position_pt)
 
   bytes_to_write = sizeof (struct board_comparison);
 
-  bytes_written = write(fhndl,(char *)position_pt,bytes_to_write);
+  bytes_written = write(fhndl,(char *)comparison_pt,bytes_to_write);
 
   if (bytes_written != bytes_to_write) {
     close(fhndl);
