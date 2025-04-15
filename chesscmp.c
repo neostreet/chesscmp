@@ -628,12 +628,63 @@ void do_paint(HWND hWnd)
     }
   }
 
+  rect.left = board_x_offset + 8 * width_in_pixels + 2;
+  rect.right = rect.left + CHARACTER_WIDTH;
+
+  for (m = 0; m < NUM_RANKS; m++) {
+    rect.top = board_y_offset + m * height_in_pixels + 19;
+    rect.bottom = rect.top + CHARACTER_HEIGHT;
+
+    if (RectVisible(hdc,&rect)) {
+      if (!bSetBkColor && (bk_color != COLOR_WHITE)) {
+        SetBkColor(hdc,bk_color);
+        bSetBkColor = TRUE;
+      }
+
+      if (!bSelectedFont) {
+        SelectObject(hdc,hfont);
+        bSelectedFont = TRUE;
+      }
+
+      if (!curr_comparison.orientation)
+        buf[0] = '1' + (NUM_RANKS - 1) - m;
+      else
+        buf[0] = '1' + m;
+
+      TextOut(hdc,rect.left,rect.top,buf,1);
+    }
+  }
+
   // display the files, if necessary
   rect.top = board_y_offset + NUM_RANKS * height_in_pixels + 2;
   rect.bottom = rect.top + CHARACTER_HEIGHT;
 
   for (m = 0; m < NUM_FILES; m++) {
     rect.left = board_x_offset + m * width_in_pixels + 21;
+    rect.right = rect.left + CHARACTER_WIDTH;
+
+    if (RectVisible(hdc,&rect)) {
+      if (!bSetBkColor && (bk_color != COLOR_WHITE)) {
+        SetBkColor(hdc,bk_color);
+        bSetBkColor = TRUE;
+      }
+
+      if (!bSelectedFont) {
+        SelectObject(hdc,hfont);
+        bSelectedFont = TRUE;
+      }
+
+      if (!curr_comparison.orientation)
+        buf[0] = 'a' + m;
+      else
+        buf[0] = 'a' + (NUM_FILES - 1) - m;
+
+      TextOut(hdc,rect.left,rect.top,buf,1);
+    }
+  }
+
+  for (m = 0; m < NUM_FILES; m++) {
+    rect.left = board_x_offset + 8 * width_in_pixels + board_x_offset + m * width_in_pixels + 21;
     rect.right = rect.left + CHARACTER_WIDTH;
 
     if (RectVisible(hdc,&rect)) {
@@ -686,18 +737,6 @@ static void handle_char_input(HWND hWnd,WPARAM wParam)
 {
   if ((wParam == 'e') || (wParam == 'E'))
     DestroyWindow(hWnd);
-}
-
-static void toggle_orientation(HWND hWnd)
-{
-  curr_comparison.orientation ^= 1;
-
-  if (highlight_rank != -1) {
-    highlight_rank = (NUM_RANKS - 1) - highlight_rank;
-    highlight_file = (NUM_FILES - 1) - highlight_file;
-  }
-
-  invalidate_board_and_coords(hWnd);
 }
 
 void do_new(HWND hWnd,struct board_comparison *comparison_pt,char *name)
@@ -853,16 +892,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
       break;
 
-    case WM_KEYDOWN:
-      switch (wParam) {
-        case VK_F2:
-          toggle_orientation(hWnd);
-
-          break;
-      }
-
-      break;
-
     case WM_COMMAND:
       wmId    = LOWORD(wParam); // Remember, these are...
       wmEvent = HIWORD(wParam); // ...different for Win32!
@@ -889,11 +918,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             lstrcpy(szCmpFile,szCmpWriteFile);
             write_board_comparison(szCmpFile,&curr_comparison);
           }
-
-          break;
-
-        case IDM_TOGGLE_ORIENTATION:
-          toggle_orientation(hWnd);
 
           break;
 
