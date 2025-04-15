@@ -7,9 +7,7 @@
 #define IDI_CHESSCMP           105
 #define IDI_SMALL              106
 
-#define IDM_TOGGLE_ORIENTATION 107
-
-#define IDM_ABOUT              108
+#define IDM_ABOUT              107
 
 #define IDC_STATIC -1
 
