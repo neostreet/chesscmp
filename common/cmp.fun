@@ -1,7 +1,7 @@
 /*** Chesscmp function declarations ***/
 
-int read_board_comparison(char *filename,struct board_comparison *position_pt);
-int write_board_comparison(char *filename,struct board_comparison *position_pt);
+int read_board_comparison(char *filename,struct board_comparison *comparison_pt);
+int write_board_comparison(char *filename,struct board_comparison *comparison_pt);
 
 void set_initial_board(unsigned char *board);
 
