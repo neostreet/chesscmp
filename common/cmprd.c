@@ -46,49 +46,45 @@ void set_initial_board(unsigned char *board)
     board[n] = initial_board[n];
 }
 
-int read_board_comparison(char *filename,struct board_comparison *comparison_pt)
+int read_board_comparisons(char *filename,int *num_comparisons_pt,struct board_comparison **comparisons_pt)
 {
+  struct stat statbuf;
+  int bytes_to_read;
+  int bytes_read;
+  int struct_size;
+  struct board_comparison *comparisons;
   int fhndl;
-  unsigned int bytes_to_read;
-  unsigned int bytes_read;
 
-  if ((fhndl = open(filename,O_RDONLY | O_BINARY)) == -1)
+  if (stat(filename,&statbuf) == -1)
     return 1;
 
-  bytes_to_read = sizeof (struct board_comparison);
+  bytes_to_read = (int)statbuf.st_size;
+  struct_size = sizeof(struct board_comparison);
 
-  bytes_read = read(fhndl,(char *)comparison_pt,bytes_to_read);
+  if (bytes_to_read % struct_size)
+    return 2;
+
+  *num_comparisons_pt = bytes_to_read / struct_size;
+
+  if ((comparisons = (struct board_comparison *)malloc(bytes_to_read)) == NULL)
+    return 3;
+
+  if ((fhndl = open(filename,O_RDONLY | O_BINARY)) == -1) {
+    free(comparisons);
+    return 4;
+  }
+
+  bytes_read = read(fhndl,(char *)comparisons,bytes_to_read);
 
   if (bytes_read != bytes_to_read) {
+    free(comparisons);
     close(fhndl);
-    return 2;
+    return 5;
   }
 
   close(fhndl);
 
-  return 0;
-}
-
-int write_board_comparison(char *filename,struct board_comparison *comparison_pt)
-{
-  int fhndl;
-  unsigned int bytes_to_write;
-  unsigned int bytes_written;
-
-  if ((fhndl = open(filename,O_CREAT | O_TRUNC | O_WRONLY | O_BINARY,
-      S_IREAD | S_IWRITE)) == -1)
-    return 1;
-
-  bytes_to_write = sizeof (struct board_comparison);
-
-  bytes_written = write(fhndl,(char *)comparison_pt,bytes_to_write);
-
-  if (bytes_written != bytes_to_write) {
-    close(fhndl);
-    return 2;
-  }
-
-  close(fhndl);
+  *comparisons_pt = comparisons;
 
   return 0;
 }
