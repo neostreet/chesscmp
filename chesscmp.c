@@ -750,6 +750,24 @@ void do_read(HWND hWnd,LPSTR name,int *num_comparisons_pt,struct board_compariso
   }
 }
 
+void advance_to_next_comparison(HWND hWnd,WPARAM wParam)
+{
+  if (wParam == VK_F2) {
+    curr_comparison++;
+
+    if (curr_comparison == num_comparisons)
+      curr_comparison = 0;
+  }
+  else {
+    curr_comparison--;
+
+    if (curr_comparison < 0)
+      curr_comparison = num_comparisons - 1;
+  }
+
+  InvalidateRect(hWnd,NULL,TRUE);
+}
+
 //
 //  FUNCTION: WndProc(HWND, unsigned, WORD, LONG)
 //
@@ -858,22 +876,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     case WM_KEYDOWN:
       switch (wParam) {
         case VK_F2:
-          curr_comparison++;
-
-          if (curr_comparison == num_comparisons)
-            curr_comparison = 0;
-
-          InvalidateRect(hWnd,NULL,TRUE);
-
-          break;
-
         case VK_F3:
-          curr_comparison--;
-
-          if (curr_comparison == -1)
-            curr_comparison = num_comparisons - 1;
-
-          InvalidateRect(hWnd,NULL,TRUE);
+          advance_to_next_comparison(hWnd,wParam);
 
           break;
       }
@@ -1056,8 +1060,16 @@ BOOL CenterWindow (HWND hwndChild, HWND hwndParent)
    return SetWindowPos (hwndChild, NULL, xNew, yNew, 0, 0, SWP_NOSIZE | SWP_NOZORDER);
 }
 
+static bool bAdvance;
+
 void do_lbuttondown(HWND hWnd,int file,int rank)
 {
+  if (bAdvance) {
+    bAdvance = false;
+    advance_to_next_comparison(hWnd,VK_F2);
+    return;
+  }
+
   if (debug_fptr != NULL) {
     fprintf(debug_fptr,"do_lbuttondown: rank = %d, file = %d\n",rank,file);
   }
