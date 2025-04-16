@@ -106,6 +106,7 @@ static struct board_comparison *comparisons;
 static int num_comparisons;
 static int curr_comparison;
 static int default_bigbmp_row;
+static int curr_bigbmp_row;
 
 // Forward declarations of functions included in this code module:
 
@@ -478,7 +479,7 @@ void do_paint(HWND hWnd)
   if (default_bigbmp_row)
     bigbmp_row = default_bigbmp_row;
   else
-    bigbmp_row = 0;
+    bigbmp_row = curr_bigbmp_row;
 
   hdc = BeginPaint(hWnd,&ps);
 
@@ -1066,6 +1067,7 @@ void do_lbuttondown(HWND hWnd,int file,int rank)
 {
   if (bAdvance) {
     bAdvance = false;
+    curr_bigbmp_row = 0;
     advance_to_next_comparison(hWnd,VK_F2);
     return;
   }
@@ -1073,4 +1075,13 @@ void do_lbuttondown(HWND hWnd,int file,int rank)
   if (debug_fptr != NULL) {
     fprintf(debug_fptr,"do_lbuttondown: rank = %d, file = %d\n",rank,file);
   }
+
+  bAdvance = true;
+
+  if ((rank == comparisons[curr_comparison].rank) && (file == comparisons[curr_comparison].file))
+    curr_bigbmp_row = 2;
+  else
+    curr_bigbmp_row = 5;
+
+  InvalidateRect(hWnd,NULL,TRUE);
 }
