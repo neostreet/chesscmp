@@ -732,6 +732,28 @@ static void handle_char_input(HWND hWnd,WPARAM wParam)
     DestroyWindow(hWnd);
 }
 
+static void show_comparison_stats(HWND hWnd)
+{
+  double correct_pct;
+  char buf[256];
+
+  if (!comparison_attempts)
+    correct_pct = (double)0;
+  else
+    correct_pct = (double)comparisons_correct / (double)comparison_attempts * (double)100;
+
+  sprintf(buf,"comparison attempts: %d, comparisons correct: %d, percent correct: %lf",
+    comparisons_correct,comparison_attempts,correct_pct);
+
+  MessageBox(hWnd,buf,NULL,MB_OK);
+}
+
+static void clear_comparison_stats()
+{
+  comparison_attempts = 0;
+  comparisons_correct = 0;
+}
+
 void do_read(HWND hWnd,LPSTR name,int *num_comparisons_pt,struct board_comparison **comparisons_pt)
 {
   int retval;
@@ -897,6 +919,16 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             name = OpenFileName.lpstrFile;
             do_read(hWnd,name,&num_comparisons,&comparisons);
           }
+
+          break;
+
+        case IDM_SHOW_COMPARISON_STATS:
+          show_comparison_stats(hWnd);
+
+          break;
+
+        case IDM_CLEAR_COMPARISON_STATS:
+          clear_comparison_stats();
 
           break;
 
@@ -1078,8 +1110,12 @@ void do_lbuttondown(HWND hWnd,int file,int rank)
 
   bAdvance = true;
 
-  if ((rank == comparisons[curr_comparison].rank) && (file == comparisons[curr_comparison].file))
+  comparison_attempts++;
+
+  if ((rank == comparisons[curr_comparison].rank) && (file == comparisons[curr_comparison].file)) {
     curr_bigbmp_row = 2;
+    comparisons_correct++;
+  }
   else
     curr_bigbmp_row = 5;
 
