@@ -9,6 +9,9 @@
 
 #define IDM_ABOUT              107
 
+#define IDM_SHOW_COMPARISON_STATS  108
+#define IDM_CLEAR_COMPARISON_STATS 109
+
 #define IDC_STATIC -1
 
 #define DLG_VERFIRST        400
