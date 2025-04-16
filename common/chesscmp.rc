@@ -56,6 +56,11 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "E&xit",                       IDM_EXIT
     END
+    POPUP "&Options"
+    BEGIN
+        MENUITEM "&Show comparison stats",      IDM_SHOW_COMPARISON_STATS
+        MENUITEM "&Clear comparison stats",     IDM_CLEAR_COMPARISON_STATS
+    END
     POPUP "&Help"
     BEGIN
         MENUITEM "&About",                      IDM_ABOUT
