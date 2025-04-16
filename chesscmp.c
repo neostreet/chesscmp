@@ -105,6 +105,7 @@ static char szTitle[100];    // The title bar text
 static struct board_comparison *comparisons;
 static int num_comparisons;
 static int curr_comparison;
+static int default_bigbmp_row;
 
 // Forward declarations of functions included in this code module:
 
@@ -139,9 +140,6 @@ int APIENTRY WinMain(HINSTANCE hInstance,
   width_in_pixels = WIDTH_IN_PIXELS;
   height_in_pixels = HEIGHT_IN_PIXELS;
 
-  highlight_rank = -1;
-  highlight_file = -1;
-
   cpt = getenv("DEBUG_CHESSCMP");
 
   if (cpt != NULL) {
@@ -152,6 +150,11 @@ int APIENTRY WinMain(HINSTANCE hInstance,
     debug_level = 0;
     debug_fptr = NULL;
   }
+
+  cpt = getenv("DEFAULT_BIGBMP_ROW");
+
+  if (cpt != NULL)
+    default_bigbmp_row = atoi(cpt);
 
   if ((cpt = getenv("TOP_MARGIN")) != NULL)
     top_margin = atoi(cpt);
@@ -472,6 +475,11 @@ void do_paint(HWND hWnd)
     fprintf(debug_fptr,"top of do_paint\n");
   }
 
+  if (default_bigbmp_row)
+    bigbmp_row = default_bigbmp_row;
+  else
+    bigbmp_row = 0;
+
   hdc = BeginPaint(hWnd,&ps);
 
   for (m = 0; m < NUM_RANKS; m++) {
@@ -497,11 +505,6 @@ void do_paint(HWND hWnd)
 
       if (piece_offset >= 0) {
         bigbmp_column = piece_offset;
-
-        if ((m == highlight_rank) && (n == highlight_file))
-          bigbmp_row = 2;
-        else
-          bigbmp_row = 0;
 
         if (debug_fptr && (debug_level == 2))
           fprintf(debug_fptr,"  bigbmp_column = %d, bigbmp_row = %d\n",bigbmp_column,bigbmp_row);
@@ -539,11 +542,6 @@ void do_paint(HWND hWnd)
 
       if (piece_offset >= 0) {
         bigbmp_column = piece_offset;
-
-        if ((m == highlight_rank) && (n == highlight_file))
-          bigbmp_row = 2;
-        else
-          bigbmp_row = 0;
 
         if (debug_fptr && (debug_level == 2))
           fprintf(debug_fptr,"  bigbmp_column = %d, bigbmp_row = %d\n",bigbmp_column,bigbmp_row);
@@ -744,8 +742,6 @@ void do_read(HWND hWnd,LPSTR name,int *num_comparisons_pt,struct board_compariso
     wsprintf(szTitle,"%s - %s",szAppName,
       trim_name(name));
     SetWindowText(hWnd,szTitle);
-    highlight_rank = -1;
-    highlight_file = -1;
     InvalidateRect(hWnd,NULL,TRUE);
   }
   else {
@@ -844,9 +840,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
       // read the game passed on the command line, if there is one
       if (szCmpFile[0])
         do_read(hWnd,szCmpFile,&num_comparisons,&comparisons);
-
-      highlight_rank = -1;
-      highlight_file = -1;
 
       InvalidateRect(hWnd,NULL,TRUE);
 
