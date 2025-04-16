@@ -745,7 +745,7 @@ static void show_comparison_stats(HWND hWnd)
   sprintf(buf,"comparison attempts: %d, comparisons correct: %d, percent correct: %lf",
     comparisons_correct,comparison_attempts,correct_pct);
 
-  MessageBox(hWnd,buf,NULL,MB_OK);
+  MessageBox(hWnd,buf,"Comparison stats",MB_OK);
 }
 
 static void clear_comparison_stats()
