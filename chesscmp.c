@@ -743,7 +743,7 @@ static void show_comparison_stats(HWND hWnd)
     correct_pct = (double)comparisons_correct / (double)comparison_attempts * (double)100;
 
   sprintf(buf,"comparison attempts: %d, comparisons correct: %d, percent correct: %lf",
-    comparisons_correct,comparison_attempts,correct_pct);
+    comparison_attempts,comparisons_correct,correct_pct);
 
   MessageBox(hWnd,buf,"Comparison stats",MB_OK);
 }
