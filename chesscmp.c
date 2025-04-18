@@ -522,7 +522,7 @@ void do_paint(HWND hWnd)
 
   for (m = 0; m < NUM_RANKS; m++) {
     for (n = 0; n < NUM_FILES; n++) {
-      rect.left = board_x_offset + 8 * width_in_pixels + board_x_offset + n * width_in_pixels;
+      rect.left = board_x_offset + NUM_FILES * width_in_pixels + board_x_offset + n * width_in_pixels;
       rect.top = board_y_offset + m * height_in_pixels;
       rect.right = rect.left + width_in_pixels;
       rect.bottom = rect.top + height_in_pixels;
@@ -621,7 +621,7 @@ void do_paint(HWND hWnd)
     }
   }
 
-  rect.left = board_x_offset + 8 * width_in_pixels + 2;
+  rect.left = board_x_offset + NUM_FILES * width_in_pixels + 2;
   rect.right = rect.left + CHARACTER_WIDTH;
 
   for (m = 0; m < NUM_RANKS; m++) {
@@ -677,7 +677,7 @@ void do_paint(HWND hWnd)
   }
 
   for (m = 0; m < NUM_FILES; m++) {
-    rect.left = board_x_offset + 8 * width_in_pixels + board_x_offset + m * width_in_pixels + 21;
+    rect.left = board_x_offset + NUM_FILES * width_in_pixels + board_x_offset + m * width_in_pixels + 21;
     rect.right = rect.left + CHARACTER_WIDTH;
 
     if (RectVisible(hdc,&rect)) {
@@ -951,9 +951,24 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
       loword = LOWORD(lParam);
       hiword = HIWORD(lParam);
 
-      if ((loword >= board_x_offset) && (hiword >= board_y_offset)) {
+      if ((loword >= board_x_offset) &&
+        (loword < board_x_offset + NUM_FILES * width_in_pixels) &&
+        (hiword >= board_y_offset) &&
+        (hiword < board_y_offset + NUM_RANKS * height_in_pixels)) {
+
         file = (loword - board_x_offset) / width_in_pixels;
         rank = (hiword - board_y_offset) / height_in_pixels;
+
+        do_lbuttondown(hWnd,file,rank);
+      }
+      else if ((loword >= board_x_offset * 2 + NUM_FILES * width_in_pixels) &&
+        (loword < board_x_offset * 2 + NUM_FILES * width_in_pixels * 2) &&
+        (hiword >= board_y_offset) &&
+        (hiword < board_y_offset + NUM_RANKS * height_in_pixels)) {
+
+        file = (loword - (board_x_offset * 2 + NUM_FILES * width_in_pixels)) / width_in_pixels;
+        rank = (hiword - board_y_offset) / height_in_pixels;
+
         do_lbuttondown(hWnd,file,rank);
       }
 
@@ -1097,6 +1112,10 @@ static bool bAdvance;
 
 void do_lbuttondown(HWND hWnd,int file,int rank)
 {
+  int n;
+  int comparison_square;
+  int comparison_square_piece[2];
+
   if (bAdvance) {
     bAdvance = false;
     curr_bigbmp_row = 0;
@@ -1112,11 +1131,19 @@ void do_lbuttondown(HWND hWnd,int file,int rank)
 
   comparison_attempts++;
 
-  if ((rank == comparisons[curr_comparison].rank) && (file == comparisons[curr_comparison].file)) {
-    curr_bigbmp_row = 2;
-    comparisons_correct++;
-  }
+  if (!comparisons[curr_comparison].orientation)
+    comparison_square = ((NUM_RANKS - 1) - rank) * NUM_FILES + file;
   else
+    comparison_square = rank * NUM_FILES + (NUM_FILES - 1) - file;
+
+  for (n = 0; n < 2; n++)
+    comparison_square_piece[n] = get_piece1(comparisons[curr_comparison].board[n],comparison_square);
+
+   if (comparison_square_piece[0] != comparison_square_piece[1]) {
+     curr_bigbmp_row = 2;
+     comparisons_correct++;
+   }
+   else
     curr_bigbmp_row = 5;
 
   InvalidateRect(hWnd,NULL,TRUE);
