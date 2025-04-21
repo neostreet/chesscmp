@@ -1,7 +1,4 @@
-#define IDM_NEW                100
 #define IDM_OPEN               101
-#define IDM_SAVE               102
-#define IDM_SAVEAS             103
 #define IDM_EXIT               104
 
 #define IDI_CHESSCMP           105
