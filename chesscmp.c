@@ -773,19 +773,13 @@ void do_read(HWND hWnd,LPSTR name,int *num_comparisons_pt,struct board_compariso
   }
 }
 
-void advance_to_next_comparison(HWND hWnd,WPARAM wParam)
+void advance_to_next_comparison(HWND hWnd)
 {
-  if (wParam == VK_F2) {
-    curr_comparison++;
+  curr_comparison++;
 
-    if (curr_comparison == num_comparisons)
-      curr_comparison = 0;
-  }
-  else {
-    curr_comparison--;
-
-    if (curr_comparison < 0)
-      curr_comparison = num_comparisons - 1;
+  if (curr_comparison == num_comparisons) {
+    MessageBox(hWnd,"reached the end of the comparisons","Information",MB_OK);
+    curr_comparison = 0;
   }
 
   InvalidateRect(hWnd,NULL,TRUE);
@@ -893,17 +887,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
     case WM_CHAR:
       handle_char_input(hWnd,wParam);
-
-      break;
-
-    case WM_KEYDOWN:
-      switch (wParam) {
-        case VK_F2:
-        case VK_F3:
-          advance_to_next_comparison(hWnd,wParam);
-
-          break;
-      }
 
       break;
 
@@ -1119,7 +1102,9 @@ void do_lbuttondown(HWND hWnd,int file,int rank)
   if (bAdvance) {
     bAdvance = false;
     curr_bigbmp_row = 0;
-    advance_to_next_comparison(hWnd,VK_F2);
+
+    advance_to_next_comparison(hWnd);
+
     return;
   }
 
