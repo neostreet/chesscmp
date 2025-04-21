@@ -52,7 +52,6 @@ BEGIN
     POPUP "&File"
     BEGIN
         MENUITEM "Open &comparison file",       IDM_OPEN
-        MENUITEM "Save &As",                    IDM_SAVEAS
         MENUITEM SEPARATOR
         MENUITEM "E&xit",                       IDM_EXIT
     END
