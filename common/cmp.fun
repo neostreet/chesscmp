@@ -1,6 +1,10 @@
 /*** Chesscmp function declarations ***/
 
-int read_board_comparisons(char *filename,int *num_comparisons_pt,struct board_comparison **comparisons_pt);
+int read_board_comparisons(
+  char *filename,
+  int *num_comparisons_pt,
+  struct board_comparison **comparisons_pt,
+  int **comparison_ixs_pt);
 
 void set_initial_board(unsigned char *board);
 
