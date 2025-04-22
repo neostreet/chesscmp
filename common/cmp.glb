@@ -4,6 +4,7 @@
 #define GLOBAL extern
 #endif
 
+GLOBAL int seed;
 GLOBAL char err_msg[80];
 
 GLOBAL int dbg_move;
