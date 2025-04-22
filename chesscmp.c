@@ -103,6 +103,7 @@ static char szAppName[100];  // Name of the app
 static char szTitle[100];    // The title bar text
 
 static struct board_comparison *comparisons;
+static int *comparison_ixs;
 static int num_comparisons;
 static int curr_comparison;
 static int default_bigbmp_row;
@@ -137,9 +138,21 @@ int APIENTRY WinMain(HINSTANCE hInstance,
   int n;
   MSG msg;
   char *cpt;
+  time_t now;
 
   width_in_pixels = WIDTH_IN_PIXELS;
   height_in_pixels = HEIGHT_IN_PIXELS;
+
+  cpt = getenv("SEED_CHESSCMP");
+
+  if (cpt != NULL)
+    seed = atoi(cpt);
+  else {
+    time(&now);
+    seed = (int)now;
+  }
+
+  srand(seed);
 
   cpt = getenv("DEBUG_CHESSCMP");
 
@@ -419,7 +432,7 @@ void invalidate_square(HWND hWnd,int square)
   rank = RANK_OF(square);
   file = FILE_OF(square);
 
-  if (!comparisons[curr_comparison].orientation)
+  if (!comparisons[comparison_ixs[curr_comparison]].orientation)
     rank = (NUM_RANKS - 1) - rank;
   else
     file = (NUM_FILES - 1) - file;
@@ -497,10 +510,10 @@ void do_paint(HWND hWnd)
         fprintf(debug_fptr,"do_paint: m = %d, n = %d\n",m,n);
       }
 
-      if (!comparisons[curr_comparison].orientation)
-        piece = get_piece2(comparisons[curr_comparison].board[0],(NUM_RANKS - 1) - m,n);
+      if (!comparisons[comparison_ixs[curr_comparison]].orientation)
+        piece = get_piece2(comparisons[comparison_ixs[curr_comparison]].board[0],(NUM_RANKS - 1) - m,n);
       else
-        piece = get_piece2(comparisons[curr_comparison].board[0],m,(NUM_FILES - 1) - n);
+        piece = get_piece2(comparisons[comparison_ixs[curr_comparison]].board[0],m,(NUM_FILES - 1) - n);
 
       piece_offset = get_piece_offset(piece,m,n);
 
@@ -534,10 +547,10 @@ void do_paint(HWND hWnd)
         fprintf(debug_fptr,"do_paint: m = %d, n = %d\n",m,n);
       }
 
-      if (!comparisons[curr_comparison].orientation)
-        piece = get_piece2(comparisons[curr_comparison].board[1],(NUM_RANKS - 1) - m,n);
+      if (!comparisons[comparison_ixs[curr_comparison]].orientation)
+        piece = get_piece2(comparisons[comparison_ixs[curr_comparison]].board[1],(NUM_RANKS - 1) - m,n);
       else
-        piece = get_piece2(comparisons[curr_comparison].board[1],m,(NUM_FILES - 1) - n);
+        piece = get_piece2(comparisons[comparison_ixs[curr_comparison]].board[1],m,(NUM_FILES - 1) - n);
 
       piece_offset = get_piece_offset(piece,m,n);
 
@@ -612,7 +625,7 @@ void do_paint(HWND hWnd)
         bSelectedFont = TRUE;
       }
 
-      if (!comparisons[curr_comparison].orientation)
+      if (!comparisons[comparison_ixs[curr_comparison]].orientation)
         buf[0] = '1' + (NUM_RANKS - 1) - m;
       else
         buf[0] = '1' + m;
@@ -639,7 +652,7 @@ void do_paint(HWND hWnd)
         bSelectedFont = TRUE;
       }
 
-      if (!comparisons[curr_comparison].orientation)
+      if (!comparisons[comparison_ixs[curr_comparison]].orientation)
         buf[0] = '1' + (NUM_RANKS - 1) - m;
       else
         buf[0] = '1' + m;
@@ -667,7 +680,7 @@ void do_paint(HWND hWnd)
         bSelectedFont = TRUE;
       }
 
-      if (!comparisons[curr_comparison].orientation)
+      if (!comparisons[comparison_ixs[curr_comparison]].orientation)
         buf[0] = 'a' + m;
       else
         buf[0] = 'a' + (NUM_FILES - 1) - m;
@@ -691,7 +704,7 @@ void do_paint(HWND hWnd)
         bSelectedFont = TRUE;
       }
 
-      if (!comparisons[curr_comparison].orientation)
+      if (!comparisons[comparison_ixs[curr_comparison]].orientation)
         buf[0] = 'a' + m;
       else
         buf[0] = 'a' + (NUM_FILES - 1) - m;
@@ -754,12 +767,17 @@ static void clear_comparison_stats()
   comparisons_correct = 0;
 }
 
-void do_read(HWND hWnd,LPSTR name,int *num_comparisons_pt,struct board_comparison **comparisons_pt)
+void do_read(
+  HWND hWnd,
+  LPSTR name,
+  int *num_comparisons_pt,
+  struct board_comparison **comparisons_pt,
+  int **comparison_ixs_pt)
 {
   int retval;
   char buf[256];
 
-  retval = read_board_comparisons(name,num_comparisons_pt,comparisons_pt);
+  retval = read_board_comparisons(name,num_comparisons_pt,comparisons_pt,comparison_ixs_pt);
 
   if (!retval) {
     wsprintf(szTitle,"%s - %s",szAppName,
@@ -874,7 +892,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
       // read the game passed on the command line, if there is one
       if (szCmpFile[0])
-        do_read(hWnd,szCmpFile,&num_comparisons,&comparisons);
+        do_read(hWnd,szCmpFile,&num_comparisons,&comparisons,&comparison_ixs);
 
       InvalidateRect(hWnd,NULL,TRUE);
 
@@ -900,7 +918,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
           // Call the common dialog function.
           if (GetOpenFileName(&OpenFileName)) {
             name = OpenFileName.lpstrFile;
-            do_read(hWnd,name,&num_comparisons,&comparisons);
+            do_read(hWnd,name,&num_comparisons,&comparisons,&comparison_ixs);
           }
 
           break;
@@ -1116,13 +1134,13 @@ void do_lbuttondown(HWND hWnd,int file,int rank)
 
   comparison_attempts++;
 
-  if (!comparisons[curr_comparison].orientation)
+  if (!comparisons[comparison_ixs[curr_comparison]].orientation)
     comparison_square = ((NUM_RANKS - 1) - rank) * NUM_FILES + file;
   else
     comparison_square = rank * NUM_FILES + (NUM_FILES - 1) - file;
 
   for (n = 0; n < 2; n++)
-    comparison_square_piece[n] = get_piece1(comparisons[curr_comparison].board[n],comparison_square);
+    comparison_square_piece[n] = get_piece1(comparisons[comparison_ixs[curr_comparison]].board[n],comparison_square);
 
    if (comparison_square_piece[0] != comparison_square_piece[1]) {
      curr_bigbmp_row = 2;
